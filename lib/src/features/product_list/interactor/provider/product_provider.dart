@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../model/product_model.dart';
-import '../service/api_service.dart';
+import '../../data/model/product_model.dart';
+import '../../data/service/api_service.dart';
 
-class ProductProvider with ChangeNotifier {
-  List<Product> _products = [];
+class ProductProvider extends ChangeNotifier {
+  List<ProductModel> _products = [];
   bool _isLoading = false;
 
-  List<Product> get products => _products;
+  List<ProductModel> get products => _products;
   bool get isLoading => _isLoading;
 
   Future<void> fetchProducts() async {
@@ -18,7 +18,7 @@ class ProductProvider with ChangeNotifier {
       final products = await ApiService().fetchProducts();
 
       _products = products.map((data) {
-        return Product(
+        return ProductModel(
           id: data['id'],
           title: data['title'],
           price: data['price'].toDouble(),

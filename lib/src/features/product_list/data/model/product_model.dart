@@ -1,24 +1,32 @@
+import 'package:flutter/material.dart';
 
-class Product {
-  final int id;
-  final String title;
-  final double price;
-  final double rating;
-  final int ratingCount;
-  final String description;
-  final String category;
-  final String image;
+class ProductModel extends ChangeNotifier {
+  int id;
+  String title;
+  String image;
+  double price;
+  double rating;
+  int ratingCount;
+  String description;
+  String category;
   bool isFavorite;
 
-  Product({
+  ProductModel({
     required this.id,
     required this.title,
+    required this.image,
     required this.price,
     required this.rating,
     required this.ratingCount,
     required this.description,
     required this.category,
-    required this.image,
     this.isFavorite = false,
   });
+
+  void toggleFavorite() {
+    isFavorite = !isFavorite;
+    notifyListeners();
+  }
+
+  // Add serialization methods (toJson, fromJson) if necessary
 }

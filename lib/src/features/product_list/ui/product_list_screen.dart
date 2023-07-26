@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../data/model/product_model.dart';
-import '../data/repository/product_provider.dart';
+import '../interactor/provider/favorites_provider.dart';
+import '../interactor/provider/product_provider.dart';
 import '../data/service/api_service.dart';
 
 class ProductListScreen extends StatefulWidget {
@@ -14,12 +15,49 @@ class ProductListScreen extends StatefulWidget {
 
 class ProductListScreenState extends State<ProductListScreen> {
   final ApiService apiService = ApiService();
+  final TextEditingController _searchController = TextEditingController();
+  List<ProductModel> _displayedProducts = [];
 
   @override
   void initState() {
     super.initState();
     // Fetch products from the API on initialization
     Provider.of<ProductProvider>(context, listen: false).fetchProducts();
+
+    // Set up listener for the search field
+    _searchController.addListener(_onSearchTextChanged);
+
+    // Fetch products from the API on initialization
+    final productProvider =
+        Provider.of<ProductProvider>(context, listen: false);
+    productProvider.fetchProducts();
+
+    // Set up listener for the search field
+    _searchController.addListener(_onSearchTextChanged);
+
+    // Initialize the FavoritesProvider with the list of all products
+    final favoritesProvider =
+        Provider.of<FavoritesProvider>(context, listen: false);
+    favoritesProvider.favoriteProducts;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchTextChanged() {
+    final searchTerm = _searchController.text.toLowerCase();
+    final allProducts =
+        Provider.of<ProductProvider>(context, listen: false).products;
+
+    setState(() {
+      _displayedProducts = allProducts.where((product) {
+        final title = product.title.toLowerCase();
+        return title.contains(searchTerm);
+      }).toList();
+    });
   }
 
   @override
@@ -27,33 +65,72 @@ class ProductListScreenState extends State<ProductListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Product List'),
+        actions: [
+          IconButton(
+              onPressed: () {
+                // Navegar para a tela de adicionar produto
+                Navigator.pushNamed(context, '/favorites');
+              },
+              icon: const Icon(Icons.favorite_border_rounded))
+        ],
       ),
-      body: Consumer<ProductProvider>(
-        builder: (context, productProvider, _) {
+      body: Consumer2<ProductProvider, FavoritesProvider>(
+        builder: (context, productProvider, favoritesProvider, _) {
           if (productProvider.isLoading) {
             return const Center(
               child: CircularProgressIndicator(),
             );
           }
 
-          return GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 1,
-              crossAxisSpacing: 8.0,
-              mainAxisSpacing: 8.0,
-            ),
-            itemCount: productProvider.products.length,
-            itemBuilder: (context, index) {
-              final product = productProvider.products[index];
-              return _buildProductCard(product);
-            },
+          final products = _searchController.text.isNotEmpty
+              ? _displayedProducts
+              : productProvider.products;
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (_) => _onSearchTextChanged(),
+                  decoration: InputDecoration(
+                    hintText: 'Search Products',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              _onSearchTextChanged();
+                            },
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 1,
+                    crossAxisSpacing: 8.0,
+                    mainAxisSpacing: 8.0,
+                  ),
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    final product = products[index];
+                    return _buildProductCard(product, favoritesProvider);
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  Widget _buildProductCard(Product product) {
+  Widget _buildProductCard(
+      ProductModel product, FavoritesProvider favoritesProvider) {
     return GestureDetector(
       onTap: () {
         // Navigate to the product details screen
@@ -108,10 +185,8 @@ class ProductListScreenState extends State<ProductListScreen> {
                               color: product.isFavorite ? Colors.red : null,
                             ),
                             onPressed: () {
-                              // Toggle the favorite status of the product
-                              setState(() {
-                                product.isFavorite = !product.isFavorite;
-                              });
+                              favoritesProvider.toggleFavorite(product);
+                              product.toggleFavorite();
                             },
                           ),
                         ],
