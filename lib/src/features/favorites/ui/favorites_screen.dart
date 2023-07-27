@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:productlist/src/features/product_list/data/model/product_model.dart';
 import 'package:provider/provider.dart';
 
-import '../product_list/interactor/provider/favorites_provider.dart';
-
+import '../../product_list/interactor/provider/favorites_provider.dart';
 
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
@@ -37,7 +36,8 @@ class FavoritesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProductCard(ProductModel product, FavoritesProvider favoritesProvider) {
+  Widget _buildProductCard(
+      ProductModel product, FavoritesProvider favoritesProvider) {
     return GestureDetector(
       onTap: () {
         // Implement navigation to product details screen
@@ -75,7 +75,9 @@ class FavoritesScreen extends StatelessWidget {
                   const Spacer(),
                   IconButton(
                     icon: Icon(
-                      product.isFavorite ? Icons.favorite : Icons.favorite_border,
+                      product.isFavorite
+                          ? Icons.favorite
+                          : Icons.favorite_border,
                       color: product.isFavorite ? Colors.red : null,
                     ),
                     onPressed: () {

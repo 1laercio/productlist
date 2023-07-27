@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../product_details/ui/product_details_screen.dart';
 import '../data/model/product_model.dart';
 import '../interactor/provider/favorites_provider.dart';
 import '../interactor/provider/product_provider.dart';
@@ -22,7 +23,12 @@ class ProductListScreenState extends State<ProductListScreen> {
   void initState() {
     super.initState();
     // Fetch products from the API on initialization
-    Provider.of<ProductProvider>(context, listen: false).fetchProducts();
+    // Schedule the fetchProducts() to run after the widgets are built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(Duration.zero, () {
+        Provider.of<ProductProvider>(context, listen: false).fetchProducts();
+      });
+    });
 
     // Set up listener for the search field
     _searchController.addListener(_onSearchTextChanged);
@@ -133,8 +139,10 @@ class ProductListScreenState extends State<ProductListScreen> {
       ProductModel product, FavoritesProvider favoritesProvider) {
     return GestureDetector(
       onTap: () {
-        // Navigate to the product details screen
-        // Implement this in a similar way as the product list screen
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => ProductDetailsScreen(product: product)));
       },
       child: SizedBox(
         height: 50,

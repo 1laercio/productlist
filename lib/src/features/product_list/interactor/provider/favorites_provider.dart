@@ -23,6 +23,10 @@ class FavoritesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+   bool isFavorite(ProductModel product) {
+    return _favoriteProducts.contains(product);
+  }
+
   void updatePreferences(SharedPreferences prefs) {
     _prefs = prefs;
     _loadFavorites();
